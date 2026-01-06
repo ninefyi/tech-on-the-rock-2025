@@ -15,22 +15,37 @@ The goal of this workshop is to demonstrate how to deploy a static web applicati
 - **Security Testing**: Integration with **OWASP ZAP (Zaproxy)** for baseline security scanning.
 - **Deployment**: Optimized for **Cloudflare Pages**.
 
-## Automated Security Pipeline
+## Automated Deployment & Security Pipeline
 
-The security scan workflow is designed to be robust and flexible, supporting multiple triggers:
+The GitHub Actions workflow (`.github/workflows/security-scan.yml`) implements a two-stage pipeline:
 
-1.  **On Push**: Automatically runs when changes are detected in the `gha/**` folder.
-2.  **On Deployment**: Triggers when Cloudflare Pages successfully completes a deployment to the production environment.
-3.  **Manual Trigger**: Can be started manually via the GitHub "Actions" tab with a custom target URL.
+1.  **Deployment Stage**:
+    *   Triggered automatically on `push` to the `gha/**` directory.
+    *   Uses the `cloudflare/pages-action` to build and deploy the site to Cloudflare Pages.
+    *   Outputs the dynamic deployment URL for the next stage.
+
+2.  **Security Scan Stage**:
+    *   Runs immediately after a successful deployment.
+    *   Performs an **OWASP ZAP Baseline Scan** against the live URL.
+    *   Also supports `deployment_status` events (for external deployments) and manual `workflow_dispatch` triggers.
 
 ### Workflow Features
 
-- **Dynamic Targeting**: Automatically detects the deployment URL or uses a manual override.
+- **Integrated Deployment**: No need to manually trigger Cloudflare; the workflow handles the sync.
+- **Dynamic Targeting**: Automatically passes the newly created deployment URL to the ZAP scanner.
 - **Artifact Retention**: Generates an HTML security report and stores it as a GitHub Action artifact for 5 days.
-- **Baseline Scan**: Performs a non-intrusive scan to find common web vulnerabilities.
 
 ## Getting Started
 
-1.  **Deploy to Cloudflare**: Link this repository to a Cloudflare Pages project and set the build output directory to `gha`.
-2.  **Monitor Actions**: Check the "Actions" tab in GitHub to see the security scan results.
-3.  **Review Reports**: Download the "ZAP Security Report" artifact from successful workflow runs to audit your site's security.
+### 1. Prerequisites
+Ensure you have the following secrets configured in your GitHub Repository (**Settings > Secrets and variables > Actions**):
+*   `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token (with Pages edit permissions).
+*   `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID.
+
+### 2. Deployment
+*   The workflow is configured to deploy to a project named `gha-workshop-demo`. Update the `projectName` in the YAML file if yours differs.
+*   Push any changes to the `gha/` folder to trigger the pipeline.
+
+### 3. Verification
+*   **Monitor Actions**: Check the "Actions" tab in GitHub to see the deployment and security scan progress.
+*   **Review Reports**: Download the "ZAP Security Report" artifact from successful workflow runs to audit your site's security.
