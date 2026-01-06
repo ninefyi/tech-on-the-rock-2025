@@ -8,12 +8,15 @@ on:
         description: 'Target URL to scan'
         required: true
         default: 'https://example.com'
+  push:
+    paths:
+      - 'gha/**'
 
 jobs:
   zap_scan:
     name: Scan the web application
-    # Run if manual dispatch OR if it's a successful deployment to production
-    if: github.event_name == 'workflow_dispatch' || (github.event.deployment_status.state == 'success' && github.event.deployment_status.environment == 'production')
+    # Run if manual dispatch OR push OR if it's a successful deployment to production
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event.deployment_status.state == 'success' && github.event.deployment_status.environment == 'production')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,6 +27,9 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "TARGET_URL=${{ inputs.target_url }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "push" ]; then
+            # TODO: Update this to your actual production URL or configure a dynamic environment URL
+            echo "TARGET_URL=https://example.com" >> $GITHUB_ENV
           else
             echo "TARGET_URL=${{ github.event.deployment_status.target_url }}" >> $GITHUB_ENV
           fi
