@@ -71,6 +71,7 @@ jobs:
           allow_issue_writing: false
           fail_action: false
           cmd_options: "-a"
+          artifact_name: zap_scan.zip
 
       - name: Run Command
         run: |
