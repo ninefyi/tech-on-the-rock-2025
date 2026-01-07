@@ -12,13 +12,17 @@ jobs:
     name: Deploy to Cloudflare Pages
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     permissions:
       contents: read
       deployments: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Run Command
+        run: ls -lah
       - name: Publish to Cloudflare Pages
         id: cf_deploy
         uses: cloudflare/wrangler-action@v3
@@ -26,6 +30,6 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages deploy ./ --project-name=${{ secrets.CF_PAGES_PROJECT_NAME }} --branch=main
-          workingDirectory: ./gha/web
+          workingDirectory: "./gha/web"
     outputs:
       url: ${{ steps.cf_deploy.outputs.url }}
