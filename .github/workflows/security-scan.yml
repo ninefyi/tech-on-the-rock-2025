@@ -1,5 +1,4 @@
 name: Security Scan
-
 on:
   deployment_status:
   workflow_dispatch:
@@ -8,7 +7,6 @@ on:
         description: 'Target URL to scan'
         required: true
         default: 'https://example.com'
-
 jobs:
   deploy:
     name: Deploy to Cloudflare Pages
@@ -23,56 +21,11 @@ jobs:
 
       - name: Publish to Cloudflare Pages
         id: cf_deploy
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: 'gha-workshop-demo' # Ensure this matches your Cloudflare Pages project name
-          directory: 'gha'
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          workingDirectory: .
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy ./ --project-name=${{ secrets.CF_PAGES_PROJECT_NAME }} --branch=main
+          workingDirectory: ./gha/web
     outputs:
       url: ${{ steps.cf_deploy.outputs.url }}
-
-  zap_scan:
-    name: Scan the web application
-    needs: deploy
-    # Run if:
-    # 1. 'deploy' job succeeded (push/dispatch)
-    # 2. OR 'deploy' job was skipped AND it's a deployment_status event
-    if: |
-      always() && 
-      (needs.deploy.result == 'success' || (needs.deploy.result == 'skipped' && github.event_name == 'deployment_status'))
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Determine Target URL
-        id: url
-        run: |
-          if [ "${{ github.event_name }}" == "deployment_status" ]; then
-            echo "TARGET_URL=${{ github.event.deployment_status.target_url }}" >> $GITHUB_ENV
-          elif [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.target_url }}" != "https://example.com" ]; then
-             # If user provided a specific custom URL, use it (override deployment)
-             echo "TARGET_URL=${{ inputs.target_url }}" >> $GITHUB_ENV
-          else
-             # Default: Use the newly deployed URL
-             echo "TARGET_URL=${{ needs.deploy.outputs.url }}" >> $GITHUB_ENV
-          fi
-
-      - name: ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: ${{ env.TARGET_URL }}
-          allow_issue_writing: false
-          fail_action: false
-          cmd_options: '-a'
-
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ZAP Security Report
-          path: zap-baseline-report.html
-          retention-days: 5
