@@ -73,13 +73,9 @@ jobs:
           fail_action: false
           cmd_options: "-a"
 
-      - name: Run Command
-        run: |
-          ls -lah
-
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
           name: ZAP Security Report
-          path: zap-baseline-report.html
+          path: zap_scan.zip
           retention-days: 5
