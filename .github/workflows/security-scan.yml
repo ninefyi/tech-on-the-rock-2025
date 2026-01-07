@@ -8,14 +8,11 @@ on:
         description: 'Target URL to scan'
         required: true
         default: 'https://example.com'
-  push:
-    paths:
-      - 'gha/**'
 
 jobs:
   deploy:
     name: Deploy to Cloudflare Pages
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
