@@ -71,5 +71,5 @@ jobs:
           allow_issue_writing: false
           fail_action: false
           cmd_options: "-a"
-          rules_file_name: '.zap/rules.tsv'
+          # rules_file_name: '.zap/rules.tsv'
           artifact_name: zap_scan
